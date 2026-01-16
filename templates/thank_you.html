@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container text-center my-5 py-5">
+    <i class="fas fa-check-circle text-success fa-5x mb-3"></i>
+    <h1 class="fw-bold">Reservation Received!</h1>
+    <p class="lead">Thank you for choosing Toronto Car Rental.</p>
+    <p>We have sent a confirmation to your email.</p>
+    <hr>
+    {% if wa_link %}
+    <a href="{{ wa_link }}" class="btn btn-success btn-lg mt-3">
+        <i class="fab fa-whatsapp"></i> Confirm via WhatsApp for Faster Service
+    </a>
+    {% endif %}
+    <br>
+    <a href="{{ url_for('index') }}" class="btn btn-link mt-3">Return to Home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card border-0 shadow p-4 rounded-4">
+            <h4 class="fw-bold mb-3"><i class="fas fa-plus-circle text-danger"></i> Yeni Araç Ekle</h4>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label">Marka</label>
+                    <input type="text" name="brand" class="form-control" placeholder="Örn: Mercedes" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Model</label>
+                    <input type="text" name="model" class="form-control" placeholder="Örn: C200" required>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Fiyat (₺)</label>
+                        <input type="number" name="price" class="form-control" required>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Kategori</label>
+                        <select name="category" class="form-select">
+                            <option value="Spor">Spor</option>
+                            <option value="Lüks">Lüks</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Ekonomi">Ekonomi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Vites Tipi</label>
+                    <select name="transmission" class="form-select">
+                        <option value="Otomatik">Otomatik</option>
+                        <option value="Manuel">Manuel</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Araç Fotoğrafı</label>
+                    <input type="file" name="image" class="form-control" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn btn-dark w-100 py-2">Sisteme Ekle</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card border-0 shadow p-4 rounded-4">
+            <h4 class="fw-bold mb-3">Filodaki Araçlar</h4>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Görsel</th>
+                        <th>Marka/Model</th>
+                        <th>Fiyat</th>
+                        <th>Kategori</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for car in cars %}
+                    <tr>
+                        <td>
+                            <img src="{{ url_for('car_image', car_id=car.id) }}" width="60" height="40" style="object-fit: cover; border-radius: 5px;">
+                        </td>
+                        <td>{{ car.brand }} {{ car.model }}</td>
+                        <td>{{ car.price }}₺</td>
+                        <td><span class="badge bg-secondary">{{ car.category }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1485291571150-772bcfc10da5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+        background-size: cover;
+        background-position: center;
+        border-radius: 20px;
+        padding: 100px 20px;
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .search-box {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        margin-top: -50px;
+        position: relative;
+        z-index: 10;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
+
+<div class="hero-section">
+    <h1 class="display-4 fw-bold">Explore Canada with Premium Comfort</h1>
+    <p class="lead">Winter ready tires, unlimited kilometers, and premium insurance options.</p>
+</div>
+
+<div class="search-box text-dark">
+    <form action="{{ url_for('index') }}" method="POST">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Pick-up Location</label>
+                <select name="location" class="form-select">
+                    <option value="Toronto YYZ">Toronto Pearson (YYZ)</option>
+                    <option value="Downtown Toronto">Downtown Toronto</option>
+                    <option value="North York">North York</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Drop-off Location</label>
+                <select name="dropoff" class="form-select">
+                    <option value="Toronto YYZ">Same as Pick-up</option>
+                    <option value="Montreal">Montreal (One-way)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Pick-up Date</label>
+                <input type="date" name="pickup_date" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Return Date</label>
+                <input type="date" name="dropoff_date" class="form-control" required>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-canada w-100 py-2">FIND CAR</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="text-center mt-5 mb-5">
+    <h2 class="fw-bold">Why Choose <span class="text-canada">TorontoCarRental</span>?</h2>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <i class="fas fa-snowflake fa-3x text-info mb-3"></i>
+            <h4>Winter Ready</h4>
+            <p class="text-muted">All our cars come with certified winter tires from November to April.</p>
+        </div>
+        <div class="col-md-4">
+            <i class="fas fa-file-contract fa-3x text-secondary mb-3"></i>
+            <h4>Transparent Pricing</h4>
+            <p class="text-muted">No hidden fees. Insurance and taxes are calculated upfront.</p>
+        </div>
+        <div class="col-md-4">
+            <i class="fas fa-headset fa-3x text-canada mb-3"></i>
+            <h4>24/7 Support</h4>
+            <p class="text-muted">Roadside assistance across Canada and USA.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 bg-white p-5 shadow rounded-4 border-0">
+        <h2 class="text-center fw-bold mb-4">🚗 Yeni Araç Ekle</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <input type="text" name="brand" class="form-control py-3" placeholder="Araç Modeli (Örn: Mercedes-Benz AMG)" required>
+            </div>
+            <div class="mb-3">
+                <input type="number" name="price" class="form-control py-3" placeholder="Günlük Ücret (₺)" required>
+            </div>
+            <div class="mb-3">
+                <input type="text" name="car_id" class="form-control py-3" placeholder="Benzersiz Araç Kodu (#001)" required>
+            </div>
+            <div class="mb-4">
+                <label class="text-muted small mb-1">Araç Fotoğrafı Seçiniz:</label>
+                <input type="file" name="image" class="form-control" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-danger w-100 py-3 fw-bold shadow">ARACI KATALOĞA EKLE</button>
+        </form>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('display_cars') }}" class="btn btn-link text-decoration-none text-muted">Galeriyi Görüntüle</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

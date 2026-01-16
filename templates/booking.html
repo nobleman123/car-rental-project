@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <img src="{{ url_for('car_image', car_id=car.id) }}" class="w-100" style="height: 300px; object-fit: cover;">
+            <div class="card-body p-4">
+                <h3 class="fw-bold">{{ car.brand }} {{ car.model }}</h3>
+                <p class="text-danger fs-4 fw-bold">{{ car.price }}₺ / Gün</p>
+                <hr>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Kaç Gün Kiralayacaksınız?</label>
+                        <input type="number" name="days" class="form-control" min="1" value="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-brand w-100 py-3 fw-bold fs-5">REZERVASYONU TAMAMLA</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

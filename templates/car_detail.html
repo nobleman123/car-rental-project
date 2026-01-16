@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-7">
+            <img src="{{ car.image_url }}" class="img-fluid rounded shadow w-100" alt="{{ car.model }}">
+            <div class="mt-4">
+                <h4>Features</h4>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for feature in car.features %}
+                        <span class="badge bg-light text-dark border p-2"><i class="fas fa-star text-warning"></i> {{ feature }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card shadow border-0 p-4">
+                <h3 class="fw-bold">{{ car.brand }} {{ car.model }}</h3>
+                <p class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ car.location }}</p>
+                <h2 class="text-danger">
+                    {% if currency == 'CAD' %}${{ car.price_cad }} CAD{% else %}${{ (car.price_cad * config.CAD_TO_USD)|round|int }} USD{% endif %}
+                    <small class="fs-6 text-muted">/ day</small>
+                </h2>
+                <hr>
+                
+                <form action="{{ url_for('book_car', car_id=car.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label>Full Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Age (Must be 21+)</label>
+                        <input type="number" name="age" class="form-control" min="18" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label>Pick-up</label>
+                            <input type="date" name="pickup" class="form-control" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label>Drop-off</label>
+                            <input type="date" name="dropoff" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fab fa-cc-square"></i> Pay & Book
+                        </button>
+                        <a href="https://wa.me/{{ config.WHATSAPP_NUMBER }}?text=I want to book {{car.brand}} {{car.model}}" class="btn btn-success">
+                            <i class="fab fa-whatsapp"></i> Book via WhatsApp
+                        </a>
+                    </div>
+                    <p class="small text-muted mt-2 text-center">*Includes 13% HST tax calculation at next step.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

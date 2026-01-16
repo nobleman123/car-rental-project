@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card p-4 text-center">
+            <div class="mb-3">
+                <i class="fas fa-user-circle fa-5x text-secondary"></i>
+            </div>
+            <h4>{{ current_user.name }}</h4>
+            <p class="text-muted">{{ current_user.email }}</p>
+            <hr>
+            <h5 class="text-start mb-3"><i class="fas fa-id-card text-canada"></i> Required Documents</h5>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-2 text-start">
+                    <label class="small">Driver's License (Front)</label>
+                    <input type="file" class="form-control form-control-sm">
+                </div>
+                <div class="mb-2 text-start">
+                    <label class="small">Passport / ID</label>
+                    <input type="file" class="form-control form-control-sm">
+                </div>
+                <button class="btn btn-dark btn-sm w-100 mt-2">Upload Documents</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <h3 class="fw-bold mb-4">My Rental History</h3>
+        {% if bookings %}
+            {% for booking in bookings %}
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold">{{ booking.car.brand }} {{ booking.car.model }}</h5>
+                            <p class="mb-1 text-muted">
+                                <i class="fas fa-calendar-alt"></i> {{ booking.from_date.strftime('%Y-%m-%d') }} to {{ booking.to_date.strftime('%Y-%m-%d') }}
+                            </p>
+                            <span class="badge bg-secondary">{{ booking.pickup_location }}</span>
+                            <i class="fas fa-arrow-right mx-2 text-muted"></i>
+                            <span class="badge bg-secondary">{{ booking.dropoff_location }}</span>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="text-canada">${{ booking.total_price }} CAD</h4>
+                            <span class="badge bg-{{ 'success' if booking.status == 'Confirmed' else 'warning' }}">
+                                {{ booking.status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">You haven't rented any cars yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
