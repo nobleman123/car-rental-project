@@ -1,58 +1,67 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="row">
     <div class="col-md-4 mb-4">
-        <div class="card p-4 text-center">
-            <div class="mb-3">
-                <i class="fas fa-user-circle fa-5x text-secondary"></i>
+        <div class="card p-4">
+            <div class="text-center mb-3">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                    <i class="fas fa-user fa-2x text-secondary"></i>
+                </div>
+                <h5 class="mt-2 fw-bold">{{ current_user.name }}</h5>
+                <p class="text-muted small">{{ current_user.email }}</p>
             </div>
-            <h4>{{ current_user.name }}</h4>
-            <p class="text-muted">{{ current_user.email }}</p>
+            
             <hr>
-            <h5 class="text-start mb-3"><i class="fas fa-id-card text-canada"></i> Required Documents</h5>
+            <h6 class="fw-bold mb-3"><i class="fas fa-shield-alt text-success"></i> Verification Documents</h6>
             <form method="POST" enctype="multipart/form-data">
-                <div class="mb-2 text-start">
-                    <label class="small">Driver's License (Front)</label>
-                    <input type="file" class="form-control form-control-sm">
+                <div class="mb-3">
+                    <label class="form-label small">Driver's License</label>
+                    <input type="file" name="license_img" class="form-control form-control-sm">
+                    {% if current_user.drivers_license_img %}
+                        <small class="text-success"><i class="fas fa-check-circle"></i> Uploaded</small>
+                    {% endif %}
                 </div>
-                <div class="mb-2 text-start">
-                    <label class="small">Passport / ID</label>
-                    <input type="file" class="form-control form-control-sm">
+                <div class="mb-3">
+                    <label class="form-label small">Passport / ID</label>
+                    <input type="file" name="passport_img" class="form-control form-control-sm">
+                     {% if current_user.passport_img %}
+                        <small class="text-success"><i class="fas fa-check-circle"></i> Uploaded</small>
+                    {% endif %}
                 </div>
-                <button class="btn btn-dark btn-sm w-100 mt-2">Upload Documents</button>
+                <div class="mb-3">
+                    <label class="form-label small">Phone Number</label>
+                    <input type="text" name="phone" class="form-control form-control-sm" value="{{ current_user.phone or '' }}" placeholder="+1 416...">
+                </div>
+                <button class="btn btn-dark btn-sm w-100">Update Profile</button>
             </form>
         </div>
     </div>
 
     <div class="col-md-8">
-        <h3 class="fw-bold mb-4">My Rental History</h3>
+        <h4 class="fw-bold mb-4">My Bookings</h4>
         {% if bookings %}
             {% for booking in bookings %}
-            <div class="card mb-3 border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="fw-bold">{{ booking.car.brand }} {{ booking.car.model }}</h5>
-                            <p class="mb-1 text-muted">
-                                <i class="fas fa-calendar-alt"></i> {{ booking.from_date.strftime('%Y-%m-%d') }} to {{ booking.to_date.strftime('%Y-%m-%d') }}
-                            </p>
-                            <span class="badge bg-secondary">{{ booking.pickup_location }}</span>
-                            <i class="fas fa-arrow-right mx-2 text-muted"></i>
-                            <span class="badge bg-secondary">{{ booking.dropoff_location }}</span>
-                        </div>
-                        <div class="text-end">
-                            <h4 class="text-canada">${{ booking.total_price }} CAD</h4>
-                            <span class="badge bg-{{ 'success' if booking.status == 'Confirmed' else 'warning' }}">
-                                {{ booking.status }}
-                            </span>
-                        </div>
+            <div class="card mb-3 p-3 border-start border-4 border-{{ 'success' if booking.status == 'Confirmed' else 'warning' }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold">{{ booking.car.brand }} {{ booking.car.model }}</h5>
+                        <p class="mb-1 text-muted small">
+                            <i class="far fa-calendar"></i> {{ booking.from_date.strftime('%Y-%m-%d') }} to {{ booking.to_date.strftime('%Y-%m-%d') }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="fw-bold mb-0">${{ "%.2f"|format(booking.total_price) }}</h5>
+                        <span class="badge bg-{{ 'success' if booking.status == 'Confirmed' else 'warning' }}">{{ booking.status }}</span>
                     </div>
                 </div>
             </div>
             {% endfor %}
         {% else %}
-            <div class="alert alert-info">You haven't rented any cars yet.</div>
+            <div class="alert alert-light text-center py-5">
+                <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                <p>You haven't rented any cars yet.</p>
+                <a href="{{ url_for('display_cars') }}" class="btn btn-canada">Browse Cars</a>
+            </div>
         {% endif %}
     </div>
 </div>
