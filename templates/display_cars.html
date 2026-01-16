@@ -1,26 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center mb-5">
-    <h1 class="fw-bold">Tüm Araç Filomuz</h1>
-    <p class="text-muted">Size en uygun aracı seçin ve yola çıkın.</p>
+<div class="row mb-5 text-center">
+    <h1 class="display-4 fw-bold" style="font-family: 'Orbitron';">SELECT YOUR <span style="color: var(--gold);">EXOTIC</span> DRIVE</h1>
+    <p class="text-muted">Premium vehicles for Toronto's finest.</p>
 </div>
 
 <div class="row g-4">
     {% for car in cars %}
-    <div class="col-lg-3 col-md-6">
-        <div class="card h-100 border-0 shadow" style="border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
-            <div style="height: 200px;">
-                <img src="{{ url_for('car_image', car_id=car.id) }}" class="w-100 h-100" style="object-fit: cover;">
+    <div class="col-lg-4 col-md-6">
+        <div class="car-card h-100 p-3">
+            <div class="position-relative mb-3">
+                <img src="{{ url_for('car_image', id=car.id) }}" class="img-fluid rounded-4 shadow" style="height: 220px; width: 100%; object-fit: cover;">
+                <span class="badge position-absolute top-0 end-0 m-3 bg-dark p-2 border border-warning text-warning">
+                    ${{ car.price }}/DAY
+                </span>
             </div>
-            <div class="card-body">
-                <h5 class="fw-bold">{{ car.brand }} <br><span class="text-muted fs-6">{{ car.model }}</span></h5>
-                <div class="d-flex justify-content-between mt-3">
-                    <span class="text-muted"><i class="fas fa-cog"></i> {{ car.transmission }}</span>
-                    <span class="text-danger fw-bold">{{ car.price }}₺</span>
+            <div class="p-2">
+                <h4 class="fw-bold mb-1">{{ car.brand }} {{ car.model }}</h4>
+                <p class="text-muted small mb-3">
+                    <i class="fas fa-gas-pump me-1"></i> {{ car.fuel_type }} | 
+                    <i class="fas fa-cog me-1"></i> {{ car.transmission }}
+                </p>
+                <div class="d-flex flex-wrap gap-1 mb-4">
+                    {% for feature in car.features[:3] %}
+                        <span class="badge bg-secondary opacity-50">{{ feature }}</span>
+                    {% endfor %}
                 </div>
-                <a href="{{ url_for('book_car', car_id=car.id) }}" class="btn btn-brand w-100 mt-3">Hemen Kirala</a>
+                <a href="{{ url_for('car_detail', id=car.id) }}" class="btn btn-premium w-100">Reserve Now</a>
             </div>
         </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <h3 class="text-muted">No cars available in the fleet right now.</h3>
+        <a href="/admin" class="btn btn-gold">Add First Car</a>
     </div>
     {% endfor %}
 </div>
