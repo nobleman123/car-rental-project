@@ -23,3 +23,9 @@ Flask-WTF==1.2.1
 email_validator
 requests
 dnspython
+Flask
+flask-mongoengine
+flask-login
+werkzeug
+gunicorn
+pymongo[srv]
