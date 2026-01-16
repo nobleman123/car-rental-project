@@ -1,74 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
+<h2 class="fw-bold mb-4">Admin Control Center</h2>
+
 <div class="row">
     <div class="col-md-4">
-        <div class="card border-0 shadow p-4 rounded-4">
-            <h4 class="fw-bold mb-3"><i class="fas fa-plus-circle text-danger"></i> Yeni Araç Ekle</h4>
+        <div class="card p-4 mb-4">
+            <h5 class="fw-bold mb-3"><i class="fas fa-plus-circle text-canada"></i> Add New Vehicle</h5>
             <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label class="form-label">Marka</label>
-                    <input type="text" name="brand" class="form-control" placeholder="Örn: Mercedes" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Model</label>
-                    <input type="text" name="model" class="form-control" placeholder="Örn: C200" required>
-                </div>
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="form-label">Fiyat (₺)</label>
-                        <input type="number" name="price" class="form-control" required>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <label class="form-label">Kategori</label>
-                        <select name="category" class="form-select">
-                            <option value="Spor">Spor</option>
-                            <option value="Lüks">Lüks</option>
-                            <option value="SUV">SUV</option>
-                            <option value="Ekonomi">Ekonomi</option>
+                <input type="hidden" name="add_car" value="1">
+                <div class="mb-2"><input type="text" name="car_id" class="form-control" placeholder="License Plate / ID" required></div>
+                <div class="mb-2"><input type="text" name="brand" class="form-control" placeholder="Brand (e.g. BMW)" required></div>
+                <div class="mb-2"><input type="text" name="model" class="form-control" placeholder="Model (e.g. X5)" required></div>
+                <div class="row mb-2">
+                    <div class="col"><input type="number" name="price" class="form-control" placeholder="Price/Day ($)" required></div>
+                    <div class="col">
+                        <select name="transmission" class="form-select">
+                            <option value="Automatic">Auto</option>
+                            <option value="Manual">Manual</option>
                         </select>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Vites Tipi</label>
-                    <select name="transmission" class="form-select">
-                        <option value="Otomatik">Otomatik</option>
-                        <option value="Manuel">Manuel</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Araç Fotoğrafı</label>
-                    <input type="file" name="image" class="form-control" accept="image/*" required>
-                </div>
-                <button type="submit" class="btn btn-dark w-100 py-2">Sisteme Ekle</button>
+                <div class="mb-2"><textarea name="features" class="form-control" placeholder="Features (GPS, Sunroof...)"></textarea></div>
+                <div class="mb-3"><input type="file" name="image" class="form-control" required></div>
+                <button type="submit" class="btn btn-dark w-100">Add to Fleet</button>
             </form>
         </div>
     </div>
 
     <div class="col-md-8">
-        <div class="card border-0 shadow p-4 rounded-4">
-            <h4 class="fw-bold mb-3">Filodaki Araçlar</h4>
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Görsel</th>
-                        <th>Marka/Model</th>
-                        <th>Fiyat</th>
-                        <th>Kategori</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for car in cars %}
-                    <tr>
-                        <td>
-                            <img src="{{ url_for('car_image', car_id=car.id) }}" width="60" height="40" style="object-fit: cover; border-radius: 5px;">
-                        </td>
-                        <td>{{ car.brand }} {{ car.model }}</td>
-                        <td>{{ car.price }}₺</td>
-                        <td><span class="badge bg-secondary">{{ car.category }}</span></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3"><i class="fas fa-list-alt"></i> Recent Bookings</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Car</th>
+                            <th>Dates</th>
+                            <th>Total (CAD)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>
+                                <strong>{{ booking.user.name }}</strong><br>
+                                <small class="text-muted">{{ booking.user.phone }}</small>
+                            </td>
+                            <td>{{ booking.car.brand }} {{ booking.car.model }}</td>
+                            <td>
+                                <small>{{ booking.from_date.strftime('%d/%m') }} - {{ booking.to_date.strftime('%d/%m') }}</small><br>
+                                <span class="badge bg-light text-dark border">{{ booking.days }} Days</span>
+                            </td>
+                            <td class="fw-bold text-success">${{ "%.2f"|format(booking.total_price) }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'warning' if booking.status=='Pending' else 'success' if booking.status=='Confirmed' else 'danger' }}">
+                                    {{ booking.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if booking.status == 'Pending' %}
+                                    <a href="{{ url_for('manage_booking', action='confirm', booking_id=booking.id) }}" class="btn btn-sm btn-success" title="Approve"><i class="fas fa-check"></i></a>
+                                    <a href="{{ url_for('manage_booking', action='cancel', booking_id=booking.id) }}" class="btn btn-sm btn-danger" title="Reject"><i class="fas fa-times"></i></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
