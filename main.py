@@ -4,74 +4,53 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_mongoengine import MongoEngine
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from authlib.integrations.flask_client import OAuth
 
 app = Flask(__name__)
 
 # --- AYARLAR ---
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'TorontoCarRental_Secret_2026'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'TorontoCarRental_Premium_2026'
 app.config['MONGODB_SETTINGS'] = {
     'host': os.environ.get('MONGO_URI') or 'mongodb+srv://Torontocarental:inan.1907@cluster0.oht1igm.mongodb.net/CarRentalDB?retryWrites=true&w=majority',
     'connectTimeoutMS': 30000,
 }
 
-# --- GOOGLE OAUTH AYARLARI ---
-app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
-app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
-
 db = MongoEngine(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-oauth = OAuth(app)
-google = oauth.register(
-    name='google',
-    client_id=app.config['GOOGLE_CLIENT_ID'],
-    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    access_token_params=None,
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    authorize_params=None,
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',
-    client_kwargs={'scope': 'openid email profile'},
-)
-
 # --- MODELLER ---
 class User(UserMixin, db.Document):
     email = db.StringField(unique=True, required=True)
-    password = db.StringField() # Google girişinde boş olabilir
+    password = db.StringField(required=True)
     name = db.StringField(required=True)
     phone = db.StringField()
     address = db.StringField()
     city = db.StringField()
-    province = db.StringField()
-    zip_code = db.StringField()
     drivers_license_img = db.ImageField()
     passport_img = db.ImageField()
     is_admin = db.BooleanField(default=False)
-    auth_type = db.StringField(default='email') # email veya google
 
 class Car(db.Document):
-    car_id = db.StringField(unique=True)
+    car_id = db.StringField(unique=True) 
     brand = db.StringField(required=True)
     model = db.StringField(required=True)
-    category = db.StringField(choices=['SUV', 'Sedan', 'Luxury', 'Economy', 'Sport'], default='Sedan')
-    price = db.IntField(required=True)
+    # Temadaki kategorilerle eşleştirdik
+    category = db.StringField(choices=['economy', 'suv', 'van', 'luxury', 'electric', 'sport'], default='economy')
+    price = db.IntField(required=True) 
     transmission = db.StringField(choices=['Automatic', 'Manual'], default='Automatic')
     fuel_type = db.StringField(choices=['Gasoline', 'Electric', 'Hybrid', 'Diesel'], default='Gasoline')
     image = db.ImageField()
-    features = db.ListField(db.StringField())
+    features = db.ListField(db.StringField()) 
     is_available = db.BooleanField(default=True)
 
 class Booking(db.Document):
     user = db.ReferenceField(User)
     car = db.ReferenceField(Car)
+    pickup_location = db.StringField()
+    dropoff_location = db.StringField()
     from_date = db.DateTimeField(required=True)
     to_date = db.DateTimeField(required=True)
     days = db.IntField()
-    base_price = db.IntField()
-    tax_amount = db.FloatField()
     total_price = db.FloatField()
     status = db.StringField(default="Pending", choices=['Pending', 'Confirmed', 'Cancelled', 'Completed'])
     created_at = db.DateTimeField(default=datetime.utcnow)
@@ -80,50 +59,28 @@ class Booking(db.Document):
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
-# --- CONTEXT PROCESSOR (WhatsApp için her sayfada geçerli) ---
-@app.context_processor
-def inject_whatsapp():
-    return dict(whatsapp_number="15550123456") # Kendi numaranı buraya yaz
-
 # --- ROUTES ---
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # 405 HATASI ÇÖZÜMÜ: Ana sayfadan gelen POST isteğini yakala
     if request.method == 'POST':
-        # Kullanıcı "Find Car" dediğinde Fleet sayfasına yönlendir
-        pickup = request.form.get('pickup')
+        # Ana sayfadaki formdan gelen verileri alıp Fleet sayfasına filtre olarak atabiliriz
+        # Şimdilik direkt filoya yönlendiriyoruz
         return redirect(url_for('display_cars'))
         
-    cars = Car.objects(is_available=True).limit(4)
+    # Vitrin için premium araçlardan 3 tane
+    cars = Car.objects(is_available=True).limit(3)
     return render_template('index.html', cars=cars)
 
-# --- GOOGLE LOGIN ROUTES ---
-@app.route('/login/google')
-def google_login():
-    redirect_uri = url_for('google_authorize', _external=True)
-    return google.authorize_redirect(redirect_uri)
-
-@app.route('/google/callback')
-def google_authorize():
-    token = google.authorize_access_token()
-    user_info = google.get('userinfo').json()
-    
-    email = user_info['email']
-    user = User.objects(email=email).first()
-    
-    if not user:
-        user = User(
-            email=email,
-            name=user_info['name'],
-            auth_type='google',
-            password='google_user_no_pass' # Dummy password
-        )
-        user.save()
-    
-    login_user(user)
-    flash('Logged in via Google successfully!', 'success')
-    return redirect(url_for('dashboard'))
+@app.route('/fleet')
+def display_cars():
+    # Kategori filtresi
+    category = request.args.get('category')
+    if category and category != 'all':
+        cars = Car.objects(is_available=True, category=category)
+    else:
+        cars = Car.objects(is_available=True)
+    return render_template('display_cars.html', cars=cars)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -138,11 +95,10 @@ def register():
             email=email,
             password=generate_password_hash(request.form.get('password')),
             name=request.form.get('name'),
-            phone=request.form.get('phone'),
-            auth_type='email'
+            phone=request.form.get('phone')
         )
         user.save()
-        flash('Account created successfully. Please login.', 'success')
+        flash('Welcome to Toronto Premium Rental. Please login.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -157,20 +113,16 @@ def login():
         if email == 'admin' and password == '12345':
             u = User.objects(email='admin@toronto.ca').first()
             if not u:
-                u = User(email='admin@toronto.ca', password=generate_password_hash('12345'), name='Admin', is_admin=True).save()
+                u = User(email='admin@toronto.ca', password=generate_password_hash('12345'), name='Master Admin', is_admin=True).save()
             login_user(u)
             return redirect(url_for('admin'))
 
         user = User.objects(email=email).first()
-        # Google hesapları şifre ile giremez uyarısı eklenebilir
-        if user and user.auth_type == 'email' and check_password_hash(user.password, password):
+        if user and check_password_hash(user.password, password):
             login_user(user)
+            flash(f'Welcome back, {user.name}', 'success')
             return redirect(url_for('admin' if user.is_admin else 'dashboard'))
-        elif user and user.auth_type == 'google':
-             flash('Please use Google Login for this email.', 'warning')
-        else:
-            flash('Invalid email or password.', 'danger')
-            
+        flash('Invalid credentials.', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
@@ -179,11 +131,6 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route('/fleet')
-def display_cars():
-    cars = Car.objects(is_available=True)
-    return render_template('display_cars.html', cars=cars)
-
 @app.route('/car/<car_id>', methods=['GET', 'POST'])
 def car_detail(car_id):
     car = Car.objects(pk=car_id).first()
@@ -191,49 +138,31 @@ def car_detail(car_id):
 
     if request.method == 'POST':
         if not current_user.is_authenticated:
-            flash('Please login to book a car.', 'warning')
+            flash('Please login to finalize booking.', 'warning')
             return redirect(url_for('login'))
             
-        # 1. Tarih Kontrolleri
         try:
             pickup = datetime.strptime(request.form.get('pickup'), '%Y-%m-%d')
             dropoff = datetime.strptime(request.form.get('dropoff'), '%Y-%m-%d')
         except ValueError:
-            flash('Invalid date format.', 'danger')
+            flash('Invalid dates selected.', 'danger')
             return redirect(url_for('car_detail', car_id=car_id))
 
         delta = (dropoff - pickup).days
-        if delta < 1:
-            flash('Rental period must be at least 1 day.', 'danger')
-            return redirect(url_for('car_detail', car_id=car_id))
-
-        # 2. Belge ve Adres Güncelleme (Rezervasyon sırasında zorunlu)
-        phone = request.form.get('phone')
-        address = request.form.get('address')
+        if delta < 1: delta = 1
+            
+        # Kullanıcı bilgilerini güncelle (Formdan geliyorsa)
+        if request.form.get('phone'): current_user.phone = request.form.get('phone')
+        if request.form.get('address'): current_user.address = request.form.get('address')
         
-        # Eğer kullanıcıda bu bilgiler eksikse ve formdan geliyorsa güncelle
-        if phone: current_user.phone = phone
-        if address: current_user.address = address
-        
-        # Dosya Yükleme Kontrolü
+        # Belge yükleme
         if 'license_img' in request.files:
             f = request.files['license_img']
-            if f.filename: 
-                current_user.drivers_license_img.replace(f, content_type=f.content_type)
-        
-        if 'passport_img' in request.files:
-            f = request.files['passport_img']
-            if f.filename: 
-                current_user.passport_img.replace(f, content_type=f.content_type)
+            if f.filename: current_user.drivers_license_img.replace(f, content_type=f.content_type)
         
         current_user.save()
 
-        # Eksik belge kontrolü (Opsiyonel: İstersen burayı açabilirsin)
-        # if not current_user.drivers_license_img:
-        #     flash('You must upload your Drivers License to book.', 'danger')
-        #     return redirect(url_for('car_detail', car_id=car_id))
-            
-        # 3. Rezervasyonu Oluştur
+        # Fiyat Hesaplama
         base_price = car.price * delta
         tax = base_price * 0.13
         total = base_price + tax
@@ -241,15 +170,15 @@ def car_detail(car_id):
         booking = Booking(
             user=current_user,
             car=car,
+            pickup_location=request.form.get('pickup_loc'),
+            dropoff_location=request.form.get('dropoff_loc'),
             from_date=pickup,
             to_date=dropoff,
             days=delta,
-            base_price=base_price,
-            tax_amount=tax,
             total_price=total
         )
         booking.save()
-        flash('Reservation request sent! Documents updated.', 'success')
+        flash('Reservation request created successfully!', 'success')
         return redirect(url_for('dashboard'))
         
     return render_template('car_detail.html', car=car)
@@ -257,43 +186,38 @@ def car_detail(car_id):
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    # Dashboard sadece görüntüleme ve ek dosya güncelleme için kalsın
-    if request.method == 'POST':
-        if 'license_img' in request.files:
-            f = request.files['license_img']
-            if f.filename: current_user.drivers_license_img.replace(f, content_type=f.content_type)
-        current_user.save()
-        flash('Profile updated.', 'success')
-
     bookings = Booking.objects(user=current_user).order_by('-created_at')
     return render_template('dashboard.html', bookings=bookings)
 
+# --- ADMIN PANELİ (GELİŞMİŞ) ---
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin():
     if not current_user.is_admin: return redirect(url_for('index'))
     
     if request.method == 'POST' and 'add_car' in request.form:
-        # Hata Yönetimi Ekleyelim
         try:
+            # Features virgülle ayrılmış string gelir, listeye çeviririz
+            feats = [x.strip() for x in request.form.get('features', '').split(',') if x.strip()]
+            
             car = Car(
                 car_id=request.form.get('car_id'),
                 brand=request.form.get('brand'),
                 model=request.form.get('model'),
-                price=int(request.form.get('price')),
                 category=request.form.get('category'),
+                price=int(request.form.get('price')),
                 transmission=request.form.get('transmission'),
-                features=request.form.get('features').split(',') if request.form.get('features') else []
+                fuel_type=request.form.get('fuel_type'),
+                features=feats
             )
             if 'image' in request.files:
                 f = request.files['image']
                 if f.filename: car.image.put(f, content_type=f.content_type)
             car.save()
-            flash('New car added to fleet successfully.', 'success')
+            flash('Vehicle added to fleet.', 'success')
         except Exception as e:
-            flash(f'Error adding car: {str(e)}', 'danger')
+            flash(f'Error: {str(e)}', 'danger')
 
-    # Tüm arabaları getir (QuerySet'i listeye çevirmeyi deneyelim garanti olsun)
     cars = Car.objects.all()
     bookings = Booking.objects.all().order_by('-created_at')
     return render_template('admin.html', cars=cars, bookings=bookings)
@@ -308,7 +232,15 @@ def manage_booking(action, booking_id):
         elif action == 'cancel': booking.status = 'Cancelled'
         elif action == 'complete': booking.status = 'Completed'
         booking.save()
-        flash(f'Booking {action}ed.', 'success')
+        flash(f'Booking {action}.', 'success')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/delete_car/<car_id>')
+@login_required
+def delete_car(car_id):
+    if not current_user.is_admin: return redirect(url_for('index'))
+    Car.objects(pk=car_id).delete()
+    flash('Car removed from fleet.', 'warning')
     return redirect(url_for('admin'))
 
 @app.route('/img/car/<car_id>')
