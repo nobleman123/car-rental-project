@@ -1,205 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-5">
-    <div>
-        <h2 class="text-white mb-0">Command Center</h2>
-        <p class="text-muted">Manage fleet and bookings</p>
-    </div>
-    <button class="btn btn-premium" data-bs-toggle="modal" data-bs-target="#addCarModal">
-        <i class="fas fa-plus-circle me-2"></i> Add New Vehicle
-    </button>
-</div>
-
-<div class="row mb-5">
-    <div class="col-md-4">
-        <div class="card-custom p-4 text-center">
-            <h3 class="text-warning">{{ cars|length }}</h3>
-            <p class="text-muted">Total Vehicles</p>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card-custom p-4 text-center">
-            <h3 class="text-success">{{ bookings|length }}</h3>
-            <p class="text-muted">Total Bookings</p>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card-custom p-4 text-center">
-            <h3 class="text-danger">Active</h3>
-            <p class="text-muted">System Status</p>
-        </div>
-    </div>
-</div>
-
 <div class="row">
-    <div class="col-lg-12 mb-5">
-        <div class="card-custom p-4">
-            <h4 class="mb-4 text-warning"><i class="fas fa-car me-2"></i> Fleet Inventory</h4>
+    <div class="col-md-4">
+        <div class="card bg-dark border-warning p-4 rounded-4 shadow">
+            <h4 class="text-warning mb-4"><i class="fas fa-plus-circle me-2"></i>Add Vehicle</h4>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="add_car" value="1">
+                <div class="mb-3"><input type="text" name="brand" class="form-control" placeholder="Brand (e.g. BMW)" required></div>
+                <div class="mb-3"><input type="text" name="model" class="form-control" placeholder="Model (e.g. M4)" required></div>
+                <div class="mb-3">
+                    <select name="category" class="form-select bg-dark text-white border-secondary">
+                        <option value="SUV">SUV</option>
+                        <option value="Luxury">Luxury</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Economy">Economy</option>
+                    </select>
+                </div>
+                <div class="mb-3"><input type="number" name="price" class="form-control" placeholder="Daily Price ($)" required></div>
+                <div class="mb-3"><input type="text" name="car_id" class="form-control" placeholder="Unique ID (e.g. #001)" required></div>
+                <div class="mb-3"><input type="text" name="features" class="form-control" placeholder="Features (comma separated)"></div>
+                <div class="mb-3">
+                    <label class="small text-muted">Vehicle Photo</label>
+                    <input type="file" name="image" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-premium w-100">Add to Fleet</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card bg-dark border-secondary p-4 rounded-4">
+            <h4 class="text-white mb-4">Current Fleet</h4>
             <div class="table-responsive">
-                <table class="table table-dark table-hover align-middle">
+                <table class="table table-dark table-hover">
                     <thead>
                         <tr>
                             <th>Image</th>
-                            <th>Info</th>
-                            <th>Category</th>
-                            <th>Price/Day</th>
+                            <th>Model</th>
+                            <th>Price</th>
                             <th>Status</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for car in cars %}
                         <tr>
-                            <td>
-                                {% if car.image %}
-                                <img src="{{ url_for('car_image', car_id=car.id) }}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 5px;">
-                                {% else %}
-                                <div style="width: 60px; height: 40px; background: #333; border-radius: 5px;"></div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <strong>{{ car.brand }} {{ car.model }}</strong><br>
-                                <small class="text-muted">{{ car.car_id }}</small>
-                            </td>
-                            <td><span class="badge bg-secondary">{{ car.category|upper }}</span></td>
-                            <td class="text-warning fw-bold">${{ car.price }}</td>
-                            <td>
-                                {% if car.is_available %}
-                                <span class="badge bg-success">Available</span>
-                                {% else %}
-                                <span class="badge bg-danger">Rented</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url_for('delete_car', car_id=car.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
-                            </td>
+                            <td><img src="{{ url_for('car_image', id=car.id) }}" width="50" class="rounded"></td>
+                            <td>{{ car.brand }} {{ car.model }}</td>
+                            <td>${{ car.price }}</td>
+                            <td><span class="badge bg-success">Live</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-12">
-        <div class="card-custom p-4">
-            <h4 class="mb-4 text-info"><i class="fas fa-calendar-check me-2"></i> Recent Bookings</h4>
-            <div class="table-responsive">
-                <table class="table table-dark table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>User Details</th>
-                            <th>Car</th>
-                            <th>Dates</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for booking in bookings %}
-                        <tr>
-                            <td>
-                                <strong>{{ booking.user.name }}</strong><br>
-                                <small class="text-muted">{{ booking.user.email }}</small><br>
-                                <small class="text-warning">{{ booking.user.phone }}</small>
-                            </td>
-                            <td>{{ booking.car.brand }} {{ booking.car.model }}</td>
-                            <td>
-                                {{ booking.from_date.strftime('%Y-%m-%d') }} <i class="fas fa-arrow-right mx-1 text-muted"></i> {{ booking.to_date.strftime('%Y-%m-%d') }}
-                            </td>
-                            <td class="fw-bold">${{ "%.2f"|format(booking.total_price) }}</td>
-                            <td>
-                                <span class="badge bg-{{ 'warning' if booking.status=='Pending' else 'success' if booking.status=='Confirmed' else 'danger' }}">
-                                    {{ booking.status }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if booking.status == 'Pending' %}
-                                    <a href="{{ url_for('manage_booking', action='confirm', booking_id=booking.id) }}" class="btn btn-sm btn-success" title="Approve"><i class="fas fa-check"></i></a>
-                                    <a href="{{ url_for('manage_booking', action='cancel', booking_id=booking.id) }}" class="btn btn-sm btn-danger" title="Reject"><i class="fas fa-times"></i></a>
-                                {% endif %}
-                                {% if booking.status == 'Confirmed' %}
-                                    <a href="{{ url_for('manage_booking', action='complete', booking_id=booking.id) }}" class="btn btn-sm btn-primary" title="Complete"><i class="fas fa-flag-checkered"></i></a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addCarModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--primary-red);">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title text-white">Add New Vehicle</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="add_car" value="1">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="text-muted small">Brand</label>
-                            <input type="text" name="brand" class="form-control" placeholder="e.g. BMW" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Model</label>
-                            <input type="text" name="model" class="form-control" placeholder="e.g. X5" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Category</label>
-                            <select name="category" class="form-select">
-                                <option value="economy">Economy</option>
-                                <option value="suv">SUV</option>
-                                <option value="van">Minivan</option>
-                                <option value="luxury">Luxury</option>
-                                <option value="electric">Electric</option>
-                                <option value="sport">Sport</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Transmission</label>
-                            <select name="transmission" class="form-select">
-                                <option value="Automatic">Automatic</option>
-                                <option value="Manual">Manual</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Price per Day ($)</label>
-                            <input type="number" name="price" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                             <label class="text-muted small">Unique ID (Plate)</label>
-                            <input type="text" name="car_id" class="form-control" placeholder="#001" required>
-                        </div>
-                        <div class="col-md-6">
-                             <label class="text-muted small">Fuel Type</label>
-                            <select name="fuel_type" class="form-select">
-                                <option value="Gasoline">Gasoline</option>
-                                <option value="Diesel">Diesel</option>
-                                <option value="Electric">Electric</option>
-                                <option value="Hybrid">Hybrid</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="text-muted small">Features (Separate with comma)</label>
-                            <input type="text" name="features" class="form-control" placeholder="GPS, Heated Seats, Sunroof, Bluetooth">
-                        </div>
-                        <div class="col-12">
-                            <label class="text-muted small">Vehicle Image</label>
-                            <input type="file" name="image" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="mt-4 text-end">
-                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-premium">Add to Fleet</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
