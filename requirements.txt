@@ -9,3 +9,4 @@ gunicorn==21.2.0
 mongoengine==0.27.0
 email-validator==2.1.0.post1
 blinker==1.6.2
+pymongo==3.12.3
