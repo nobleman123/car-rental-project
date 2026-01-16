@@ -1,62 +1,48 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container my-5">
-    <div class="row">
-        <div class="col-md-7">
-            <img src="{{ car.image_url }}" class="img-fluid rounded shadow w-100" alt="{{ car.model }}">
-            <div class="mt-4">
-                <h4>Features</h4>
-                <div class="d-flex flex-wrap gap-2">
-                    {% for feature in car.features %}
-                        <span class="badge bg-light text-dark border p-2"><i class="fas fa-star text-warning"></i> {{ feature }}</span>
-                    {% endfor %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card overflow-hidden">
+            <img src="{{ url_for('car_image', car_id=car.id) }}" class="w-100" style="height: 400px; object-fit: cover;">
+            <div class="card-body p-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="fw-bold mb-0">{{ car.brand }} {{ car.model }}</h2>
+                    <h3 class="text-canada fw-bold">${{ car.price }} <small class="fs-6 text-muted text-dark">/ day</small></h3>
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-md-5">
-            <div class="card shadow border-0 p-4">
-                <h3 class="fw-bold">{{ car.brand }} {{ car.model }}</h3>
-                <p class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ car.location }}</p>
-                <h2 class="text-danger">
-                    {% if currency == 'CAD' %}${{ car.price_cad }} CAD{% else %}${{ (car.price_cad * config.CAD_TO_USD)|round|int }} USD{% endif %}
-                    <small class="fs-6 text-muted">/ day</small>
-                </h2>
+                
+                <div class="mb-4">
+                    {% for feature in car.features %}
+                        <span class="badge bg-light text-dark border p-2 me-1"><i class="fas fa-check text-success"></i> {{ feature }}</span>
+                    {% endfor %}
+                    <span class="badge bg-dark p-2">{{ car.transmission }}</span>
+                    <span class="badge bg-dark p-2">{{ car.fuel_type }}</span>
+                </div>
+
                 <hr>
                 
-                <form action="{{ url_for('book_car', car_id=car.id) }}" method="POST">
-                    <div class="mb-3">
-                        <label>Full Name</label>
-                        <input type="text" name="name" class="form-control" required>
+                <h4 class="mb-3">Book This Car</h4>
+                <form method="POST" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Pick-up Date</label>
+                        <input type="date" name="pickup" class="form-control" required>
                     </div>
-                    <div class="mb-3">
-                        <label>Email</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Age (Must be 21+)</label>
-                        <input type="number" name="age" class="form-control" min="18" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label>Pick-up</label>
-                            <input type="date" name="pickup" class="form-control" required>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label>Drop-off</label>
-                            <input type="date" name="dropoff" class="form-control" required>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Drop-off Date</label>
+                        <input type="date" name="dropoff" class="form-control" required>
                     </div>
                     
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-danger btn-lg">
-                            <i class="fab fa-cc-square"></i> Pay & Book
-                        </button>
-                        <a href="https://wa.me/{{ config.WHATSAPP_NUMBER }}?text=I want to book {{car.brand}} {{car.model}}" class="btn btn-success">
-                            <i class="fab fa-whatsapp"></i> Book via WhatsApp
-                        </a>
+                    <div class="col-12 mt-4">
+                        {% if current_user.is_authenticated %}
+                            <button type="submit" class="btn btn-canada w-100 py-3 fs-5 fw-bold shadow">
+                                Proceed to Booking <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <p class="text-center text-muted small mt-2">
+                                <i class="fas fa-info-circle"></i> 13% HST will be added at checkout.
+                            </p>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-dark w-100 py-3">Login to Book</a>
+                        {% endif %}
                     </div>
-                    <p class="small text-muted mt-2 text-center">*Includes 13% HST tax calculation at next step.</p>
                 </form>
             </div>
         </div>
